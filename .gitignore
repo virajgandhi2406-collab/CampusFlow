@@ -43,6 +43,8 @@ buildNumber.properties
 .env
 .env.local
 *.env
+data/
+*.mv.db
 
 # IDE and Editor Files
 .idea/
