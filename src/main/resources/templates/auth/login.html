@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Sign In')}">
+    <title>Sign In — CampusFlow</title>
+</head>
+<body class="auth-body">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="logo-icon" style="margin: 0 auto; width: 44px; height: 44px; font-size: 1.3rem;">CF</div>
+            <h1>Welcome to CampusFlow</h1>
+            <p>Student Academic &amp; Deadline Tracker</p>
+        </div>
+
+        <div th:if="${loginError != null}" class="alert alert-danger" role="alert" style="margin-bottom: 1.25rem;">
+            <span th:text="${loginError}">Invalid credentials</span>
+        </div>
+
+        <div th:if="${logoutMessage != null}" class="alert alert-success" role="alert" style="margin-bottom: 1.25rem;">
+            <span th:text="${logoutMessage}">You have been logged out</span>
+        </div>
+
+        <div th:if="${successMessage != null}" class="alert alert-success" role="alert" style="margin-bottom: 1.25rem;">
+            <span th:text="${successMessage}">Registration successful</span>
+        </div>
+
+        <form th:action="@{/login}" method="post">
+            <div class="form-group">
+                <label for="username" class="form-label">Email Address</label>
+                <input type="email" id="username" name="username" class="form-control" placeholder="student@university.edu" required autofocus autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 0.95rem; margin-top: 0.5rem;">
+                Sign In
+            </button>
+        </form>
+
+        <div style="margin-top: 1.75rem; text-align: center; font-size: 0.875rem; color: var(--neutral-600);">
+            Don't have an account yet? 
+            <a th:href="@{/register}" style="color: var(--primary); font-weight: 600; text-decoration: none;">Create one here</a>
+        </div>
+    </div>
+
+    <script th:src="@{/js/app.js}"></script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Assignments')}">
+    <title>Assignments — CampusFlow</title>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside th:replace="~{fragments/sidebar :: sidebar(${activeNav})}"></aside>
+
+        <!-- Main Content Wrapper -->
+        <div class="main-wrapper">
+            <!-- Topbar Header -->
+            <header th:replace="~{fragments/topbar :: topbar('Assignments')}"></header>
+
+            <main class="content-body">
+                <!-- Alerts / Flash Messages -->
+                <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+                <!-- Page Header & Action -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--neutral-900);">All Academic Deadlines</h2>
+                        <p style="font-size: 0.875rem; color: var(--neutral-500);">Manage, filter, and track all your semester coursework</p>
+                    </div>
+                    <a th:href="@{/assignments/new}" class="btn btn-primary">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add Assignment
+                    </a>
+                </div>
+
+                <!-- Filter & Search Toolbar -->
+                <div class="filter-card">
+                    <form th:action="@{/assignments}" method="get" class="filter-form">
+                        <div class="filter-col" style="flex: 2 1 240px;">
+                            <label for="search" class="form-label">Search Title</label>
+                            <input type="text" id="search" name="search" th:value="${filter.search}" class="form-control" placeholder="Search by assignment title...">
+                        </div>
+
+                        <div class="filter-col">
+                            <label for="subjectId" class="form-label">Subject</label>
+                            <select id="subjectId" name="subjectId" class="form-control">
+                                <option value="">All Subjects</option>
+                                <option th:each="sub : ${subjects}" th:value="${sub.id}" th:text="${sub.name}" th:selected="${filter.subjectId == sub.id}"></option>
+                            </select>
+                        </div>
+
+                        <div class="filter-col">
+                            <label for="status" class="form-label">Status</label>
+                            <select id="status" name="status" class="form-control">
+                                <option value="ALL" th:selected="${filter.status == 'ALL'}">All Statuses</option>
+                                <option value="PENDING" th:selected="${filter.status == 'PENDING'}">Pending</option>
+                                <option value="IN_PROGRESS" th:selected="${filter.status == 'IN_PROGRESS'}">In Progress</option>
+                                <option value="COMPLETED" th:selected="${filter.status == 'COMPLETED'}">Completed</option>
+                                <option value="OVERDUE" th:selected="${filter.status == 'OVERDUE'}">Overdue Only</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-col">
+                            <label for="priority" class="form-label">Priority</label>
+                            <select id="priority" name="priority" class="form-control">
+                                <option value="">All Priorities</option>
+                                <option th:each="p : ${priorities}" th:value="${p}" th:text="${p.displayName}" th:selected="${filter.priority == p}"></option>
+                            </select>
+                        </div>
+
+                        <div class="filter-col">
+                            <label for="sortBy" class="form-label">Sort By</label>
+                            <select id="sortBy" name="sortBy" class="form-control">
+                                <option value="dueDateAsc" th:selected="${filter.sortBy == 'dueDateAsc'}">Due Date: Soonest First</option>
+                                <option value="dueDateDesc" th:selected="${filter.sortBy == 'dueDateDesc'}">Due Date: Latest First</option>
+                                <option value="priorityDesc" th:selected="${filter.sortBy == 'priorityDesc'}">Priority: High to Low</option>
+                                <option value="priorityAsc" th:selected="${filter.sortBy == 'priorityAsc'}">Priority: Low to High</option>
+                                <option value="titleAsc" th:selected="${filter.sortBy == 'titleAsc'}">Title (A–Z)</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-actions">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                            <a th:href="@{/assignments}" class="btn btn-secondary">Clear</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Empty State -->
+                <div th:if="${assignmentsPage.totalElements == 0}" class="empty-state">
+                    <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <h3 class="empty-state-title">No assignments found</h3>
+                    <p class="empty-state-text">
+                        No assignments matched your search or filter parameters. Try clearing the filters or create a new assignment.
+                    </p>
+                    <a th:href="@{/assignments/new}" class="btn btn-primary">Create Assignment</a>
+                </div>
+
+                <!-- Assignments Table -->
+                <div th:if="${assignmentsPage.totalElements > 0}" class="card">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">Done</th>
+                                    <th>Title</th>
+                                    <th>Subject</th>
+                                    <th>Due Date &amp; Time</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th style="text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="assignment : ${assignmentsPage.content}">
+                                    <td>
+                                        <form th:action="@{'/assignments/' + ${assignment.id} + '/toggle-complete'}" method="post" style="display: inline;">
+                                            <button type="submit" class="btn btn-icon btn-sm"
+                                                    th:classappend="${assignment.status.name() == 'COMPLETED'} ? 'btn-primary' : 'btn-secondary'"
+                                                    th:title="${assignment.status.name() == 'COMPLETED'} ? 'Reopen assignment' : 'Mark as completed'">
+                                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{'/assignments/' + ${assignment.id}}"
+                                           style="font-weight: 600; color: var(--neutral-900); text-decoration: none;"
+                                           th:styleappend="${assignment.status.name() == 'COMPLETED'} ? 'text-decoration: line-through; color: var(--neutral-400);' : ''"
+                                           th:text="${assignment.title}">Assignment Title</a>
+                                    </td>
+                                    <td>
+                                        <span class="subject-chip">
+                                            <span class="subject-dot" th:style="'background-color: ' + ${assignment.subject.color}"></span>
+                                            <span th:text="${assignment.subject.name}">Subject</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${assignment.isOverdue()}" class="badge badge-overdue" th:text="${#temporals.format(assignment.dueDate, 'MMM d, yyyy HH:mm')}">Date</span>
+                                        <span th:if="${assignment.isDueSoon() and !assignment.isOverdue()}" class="badge badge-due-soon" th:text="${#temporals.format(assignment.dueDate, 'MMM d, yyyy HH:mm')}">Date</span>
+                                        <span th:if="${!assignment.isOverdue() and !assignment.isDueSoon()}" th:text="${#temporals.format(assignment.dueDate, 'MMM d, yyyy HH:mm')}">Date</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${assignment.priority.badgeClass}" th:text="${assignment.priority.displayName}">Priority</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${assignment.status.badgeClass}" th:text="${assignment.status.displayName}">Status</span>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <div style="display: inline-flex; gap: 0.35rem;">
+                                            <a th:href="@{'/assignments/' + ${assignment.id}}" class="btn btn-sm btn-secondary" title="View Details">
+                                                View
+                                            </a>
+                                            <a th:href="@{'/assignments/' + ${assignment.id} + '/edit'}" class="btn btn-sm btn-secondary" title="Edit Assignment">
+                                                Edit
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-secondary" style="color: var(--danger);"
+                                                    th:data-modal-target="'delete-modal-' + ${assignment.id}" title="Delete Assignment">
+                                                Delete
+                                            </button>
+                                        </div>
+
+                                        <!-- Accessible Confirmation Modal for Delete -->
+                                        <dialog th:id="'delete-modal-' + ${assignment.id}" class="cf-modal">
+                                            <div class="modal-header">
+                                                <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--neutral-900);">Confirm Deletion</h3>
+                                                <button type="button" class="alert-close" data-modal-close aria-label="Close">&times;</button>
+                                            </div>
+                                            <div class="modal-body" style="text-align: left;">
+                                                Are you sure you want to delete assignment "<strong th:text="${assignment.title}">Title</strong>"? This action cannot be undone.
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+                                                <form th:action="@{'/assignments/' + ${assignment.id} + '/delete'}" method="post" style="display: inline;">
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                            </div>
+                                        </dialog>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pagination Bar -->
+                <div th:if="${assignmentsPage.totalPages > 1}" class="pagination">
+                    <a th:href="@{/assignments(page=${assignmentsPage.number - 1}, search=${filter.search}, subjectId=${filter.subjectId}, status=${filter.status}, priority=${filter.priority}, sortBy=${filter.sortBy})}"
+                       class="page-link" th:classappend="${assignmentsPage.first} ? 'disabled' : ''">
+                        &laquo; Previous
+                    </a>
+
+                    <span th:each="pageNum : ${#numbers.sequence(0, assignmentsPage.totalPages - 1)}">
+                        <a th:href="@{/assignments(page=${pageNum}, search=${filter.search}, subjectId=${filter.subjectId}, status=${filter.status}, priority=${filter.priority}, sortBy=${filter.sortBy})}"
+                           class="page-link"
+                           th:classappend="${pageNum == assignmentsPage.number} ? 'active' : ''"
+                           th:text="${pageNum + 1}">1</a>
+                    </span>
+
+                    <a th:href="@{/assignments(page=${assignmentsPage.number + 1}, search=${filter.search}, subjectId=${filter.subjectId}, status=${filter.status}, priority=${filter.priority}, sortBy=${filter.sortBy})}"
+                       class="page-link" th:classappend="${assignmentsPage.last} ? 'disabled' : ''">
+                        Next &raquo;
+                    </a>
+                </div>
+
+                <!-- Footer -->
+                <footer th:replace="~{fragments/footer :: footer}"></footer>
+            </main>
+        </div>
+    </div>
+
+    <script th:src="@{/js/app.js}"></script>
+</body>
+</html>

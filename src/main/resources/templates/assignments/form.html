@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${isEdit} ? 'Edit Assignment' : 'Create Assignment')}">
+    <title>Assignment Form — CampusFlow</title>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside th:replace="~{fragments/sidebar :: sidebar(${activeNav})}"></aside>
+
+        <!-- Main Content Wrapper -->
+        <div class="main-wrapper">
+            <!-- Topbar Header -->
+            <header th:replace="~{fragments/topbar :: topbar(${isEdit ? 'Edit Assignment' : 'Create New Assignment'})}"></header>
+
+            <main class="content-body">
+                <!-- Alerts / Flash Messages -->
+                <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+                <!-- No Subjects Warning -->
+                <div th:if="${noSubjectsWarning}" class="alert alert-warning" role="alert">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <span>You need to add at least one subject before creating an assignment.</span>
+                    </div>
+                    <a th:href="@{/subjects/new}" class="btn btn-sm btn-primary">Create Subject First</a>
+                </div>
+
+                <div class="card" style="max-width: 760px; margin: 0 auto;">
+                    <div class="card-header">
+                        <h2 class="card-title" th:text="${isEdit ? 'Update Coursework Details' : 'Assignment Information'}">Assignment Details</h2>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="${isEdit ? '/assignments/' + assignmentDto.id + '/edit' : '/assignments'}"
+                              th:object="${assignmentDto}" method="post">
+
+                            <div class="form-group">
+                                <label for="title" class="form-label">Title <span style="color: var(--danger);">*</span></label>
+                                <input type="text" id="title" th:field="*{title}" class="form-control"
+                                       th:classappend="${#fields.hasErrors('title')} ? 'is-invalid' : ''"
+                                       placeholder="e.g. Distributed Systems Lab 2 — Raft Consensus" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
+                                <div class="form-group">
+                                    <label for="subjectId" class="form-label">Subject <span style="color: var(--danger);">*</span></label>
+                                    <select id="subjectId" th:field="*{subjectId}" class="form-control"
+                                            th:classappend="${#fields.hasErrors('subjectId')} ? 'is-invalid' : ''" required>
+                                        <option value="">-- Choose Subject --</option>
+                                        <option th:each="sub : ${subjects}" th:value="${sub.id}" th:text="${sub.name}"></option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('subjectId')}" th:errors="*{subjectId}"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="dueDateTime" class="form-label">Due Date &amp; Time <span style="color: var(--danger);">*</span></label>
+                                    <input type="datetime-local" id="dueDateTime" th:field="*{dueDateTime}" class="form-control"
+                                           th:classappend="${#fields.hasErrors('dueDateTime')} ? 'is-invalid' : ''" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('dueDateTime')}" th:errors="*{dueDateTime}"></div>
+                                    <small class="form-text">Stored and tracked in coordinated universal time (UTC).</small>
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
+                                <div class="form-group">
+                                    <label for="priority" class="form-label">Priority Level <span style="color: var(--danger);">*</span></label>
+                                    <select id="priority" th:field="*{priority}" class="form-control"
+                                            th:classappend="${#fields.hasErrors('priority')} ? 'is-invalid' : ''" required>
+                                        <option th:each="p : ${priorities}" th:value="${p}" th:text="${p.displayName}"></option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('priority')}" th:errors="*{priority}"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="status" class="form-label">Current Status <span style="color: var(--danger);">*</span></label>
+                                    <select id="status" th:field="*{status}" class="form-control"
+                                            th:classappend="${#fields.hasErrors('status')} ? 'is-invalid' : ''" required>
+                                        <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.displayName}"></option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="description" class="form-label">Description / Instructions</label>
+                                <textarea id="description" th:field="*{description}" class="form-control" rows="4"
+                                          th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"
+                                          placeholder="Enter submission requirements, rubric notes, or links..."></textarea>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+                            </div>
+
+                            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
+                                <a th:href="@{/assignments}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary" th:text="${isEdit ? 'Save Changes' : 'Create Assignment'}">
+                                    Submit
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <footer th:replace="~{fragments/footer :: footer}"></footer>
+            </main>
+        </div>
+    </div>
+
+    <script th:src="@{/js/app.js}"></script>
+</body>
+</html>

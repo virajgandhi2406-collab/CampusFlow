@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${assignment.title})}">
+    <title>Assignment Details — CampusFlow</title>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside th:replace="~{fragments/sidebar :: sidebar(${activeNav})}"></aside>
+
+        <!-- Main Content Wrapper -->
+        <div class="main-wrapper">
+            <!-- Topbar Header -->
+            <header th:replace="~{fragments/topbar :: topbar('Assignment Overview')}"></header>
+
+            <main class="content-body">
+                <!-- Alerts / Flash Messages -->
+                <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+                <!-- Breadcrumb Navigation -->
+                <div style="margin-bottom: 1.25rem;">
+                    <a th:href="@{/assignments}" style="color: var(--primary); text-decoration: none; font-size: 0.875rem; font-weight: 500;">
+                        &larr; Back to all assignments
+                    </a>
+                </div>
+
+                <div class="card" style="max-width: 860px; margin: 0 auto;">
+                    <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <span class="subject-chip">
+                                    <span class="subject-dot" th:style="'background-color: ' + ${assignment.subject.color}"></span>
+                                    <a th:href="@{'/subjects/' + ${assignment.subject.id}}" style="color: inherit; text-decoration: none;" th:text="${assignment.subject.name}">Subject</a>
+                                </span>
+                                <span class="badge" th:classappend="${assignment.priority.badgeClass}" th:text="${assignment.priority.displayName}">Priority</span>
+                                <span class="badge" th:classappend="${assignment.status.badgeClass}" th:text="${assignment.status.displayName}">Status</span>
+                            </div>
+                            <h2 class="card-title" style="font-size: 1.45rem;" th:text="${assignment.title}">Assignment Title</h2>
+                        </div>
+
+                        <!-- Action Toolbar -->
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <form th:action="@{'/assignments/' + ${assignment.id} + '/toggle-complete'}" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-sm" th:classappend="${assignment.status.name() == 'COMPLETED'} ? 'btn-secondary' : 'btn-primary'">
+                                    <span th:text="${assignment.status.name() == 'COMPLETED' ? 'Mark as Pending' : 'Mark as Completed'}">Done</span>
+                                </button>
+                            </form>
+                            <a th:href="@{'/assignments/' + ${assignment.id} + '/edit'}" class="btn btn-sm btn-secondary">Edit</a>
+                            <button type="button" class="btn btn-sm btn-secondary" style="color: var(--danger);"
+                                    th:data-modal-target="'delete-detail-modal-' + ${assignment.id}">Delete</button>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <!-- Key Metadata Grid -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--neutral-200); margin-bottom: 1.5rem;">
+                            <div>
+                                <span class="form-label" style="font-size: 0.8rem; text-transform: uppercase;">Deadline</span>
+                                <div style="margin-top: 0.25rem;">
+                                    <span th:if="${assignment.isOverdue()}" class="badge badge-overdue" style="font-size: 0.85rem;" th:text="${#temporals.format(assignment.dueDate, 'EEEE, MMM d, yyyy HH:mm')}">Date</span>
+                                    <span th:if="${assignment.isDueSoon() and !assignment.isOverdue()}" class="badge badge-due-soon" style="font-size: 0.85rem;" th:text="${#temporals.format(assignment.dueDate, 'EEEE, MMM d, yyyy HH:mm')}">Date</span>
+                                    <span th:if="${!assignment.isOverdue() and !assignment.isDueSoon()}" style="font-weight: 600; color: var(--neutral-800);" th:text="${#temporals.format(assignment.dueDate, 'EEEE, MMM d, yyyy HH:mm')}">Date</span>
+                                </div>
+                            </div>
+
+                            <div th:if="${assignment.completedAt != null}">
+                                <span class="form-label" style="font-size: 0.8rem; text-transform: uppercase;">Completed On</span>
+                                <div style="margin-top: 0.25rem; font-weight: 600; color: var(--success-text);"
+                                     th:text="${#temporals.format(assignment.completedAt, 'MMM d, yyyy HH:mm')}">
+                                    Completion Date
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="form-label" style="font-size: 0.8rem; text-transform: uppercase;">Created</span>
+                                <div style="margin-top: 0.25rem; font-size: 0.875rem; color: var(--neutral-600);"
+                                     th:text="${#temporals.format(assignment.createdAt, 'MMM d, yyyy HH:mm')}">
+                                    Created Date
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="form-label" style="font-size: 0.8rem; text-transform: uppercase;">Last Updated</span>
+                                <div style="margin-top: 0.25rem; font-size: 0.875rem; color: var(--neutral-600);"
+                                     th:text="${#temporals.format(assignment.updatedAt, 'MMM d, yyyy HH:mm')}">
+                                    Updated Date
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description Section -->
+                        <div>
+                            <h3 style="font-size: 1rem; font-weight: 600; color: var(--neutral-900); margin-bottom: 0.75rem;">Description &amp; Instructions</h3>
+                            <div th:if="${assignment.description != null and !assignment.description.isBlank()}"
+                                 style="white-space: pre-line; line-height: 1.6; color: var(--neutral-700); background-color: var(--neutral-50); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--neutral-200);"
+                                 th:text="${assignment.description}">
+                                Assignment description details...
+                            </div>
+                            <div th:if="${assignment.description == null or assignment.description.isBlank()}"
+                                 style="color: var(--neutral-400); font-style: italic;">
+                                No description was provided for this assignment.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Modal -->
+                <dialog th:id="'delete-detail-modal-' + ${assignment.id}" class="cf-modal">
+                    <div class="modal-header">
+                        <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--neutral-900);">Delete Assignment</h3>
+                        <button type="button" class="alert-close" data-modal-close aria-label="Close">&times;</button>
+                    </div>
+                    <div class="modal-body" style="text-align: left;">
+                        Are you sure you want to permanently delete "<strong th:text="${assignment.title}">Title</strong>"? This action cannot be reverted.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+                        <form th:action="@{'/assignments/' + ${assignment.id} + '/delete'}" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                        </form>
+                    </div>
+                </dialog>
+
+                <!-- Footer -->
+                <footer th:replace="~{fragments/footer :: footer}"></footer>
+            </main>
+        </div>
+    </div>
+
+    <script th:src="@{/js/app.js}"></script>
+</body>
+</html>

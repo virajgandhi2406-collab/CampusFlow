@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${subject.name})}">
+    <title>Subject Overview — CampusFlow</title>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside th:replace="~{fragments/sidebar :: sidebar(${activeNav})}"></aside>
+
+        <!-- Main Content Wrapper -->
+        <div class="main-wrapper">
+            <!-- Topbar Header -->
+            <header th:replace="~{fragments/topbar :: topbar('Course Overview')}"></header>
+
+            <main class="content-body">
+                <!-- Alerts / Flash Messages -->
+                <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+                <!-- Breadcrumb Navigation -->
+                <div style="margin-bottom: 1.25rem;">
+                    <a th:href="@{/subjects}" style="color: var(--primary); text-decoration: none; font-size: 0.875rem; font-weight: 500;">
+                        &larr; Back to all subjects
+                    </a>
+                </div>
+
+                <!-- Subject Header Card -->
+                <div class="card" th:style="'border-left: 6px solid ' + ${subject.color} + '; margin-bottom: 2rem;'">
+                    <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span class="subject-dot" th:style="'background-color: ' + ${subject.color} + '; width: 14px; height: 14px;'"></span>
+                            <h2 class="card-title" style="font-size: 1.45rem;" th:text="${subject.name}">Subject Name</h2>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a th:href="@{/assignments/new}" class="btn btn-sm btn-primary">
+                                + Add Assignment
+                            </a>
+                            <a th:href="@{'/subjects/' + ${subject.id} + '/edit'}" class="btn btn-sm btn-secondary">
+                                Edit Subject
+                            </a>
+                            <button type="button" class="btn btn-sm btn-secondary" style="color: var(--danger);"
+                                    th:data-modal-target="'delete-sub-detail-' + ${subject.id}">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p style="font-size: 0.95rem; color: var(--neutral-700); line-height: 1.6;"
+                           th:text="${subject.description != null and !subject.description.isBlank() ? subject.description : 'No description provided for this subject.'}">
+                            Description notes...
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Associated Coursework Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Associated Coursework (<span th:text="${#lists.size(assignments)}">0</span>)</h3>
+                        <a th:href="@{/assignments(subjectId=${subject.id})}" class="btn btn-sm btn-secondary">
+                            Filter in Assignments List
+                        </a>
+                    </div>
+
+                    <div class="card-body" th:if="${#lists.isEmpty(assignments)}" style="text-align: center; color: var(--neutral-500); padding: 2.5rem;">
+                        <p style="margin-bottom: 1rem;">No assignments currently logged under this subject.</p>
+                        <a th:href="@{/assignments/new}" class="btn btn-sm btn-primary">Create Assignment</a>
+                    </div>
+
+                    <div class="table-responsive" th:if="${!#lists.isEmpty(assignments)}">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">Done</th>
+                                    <th>Title</th>
+                                    <th>Due Date &amp; Time</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th style="text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="assignment : ${assignments}">
+                                    <td>
+                                        <form th:action="@{'/assignments/' + ${assignment.id} + '/toggle-complete'}" method="post" style="display: inline;">
+                                            <button type="submit" class="btn btn-icon btn-sm"
+                                                    th:classappend="${assignment.status.name() == 'COMPLETED'} ? 'btn-primary' : 'btn-secondary'"
+                                                    th:title="${assignment.status.name() == 'COMPLETED'} ? 'Reopen assignment' : 'Mark as completed'">
+                                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{'/assignments/' + ${assignment.id}}"
+                                           style="font-weight: 600; color: var(--neutral-900); text-decoration: none;"
+                                           th:styleappend="${assignment.status.name() == 'COMPLETED'} ? 'text-decoration: line-through; color: var(--neutral-400);' : ''"
+                                           th:text="${assignment.title}">Title</a>
+                                    </td>
+                                    <td>
+                                        <span th:if="${assignment.isOverdue()}" class="badge badge-overdue" th:text="${#temporals.format(assignment.dueDate, 'MMM d, yyyy HH:mm')}">Date</span>
+                                        <span th:if="${assignment.isDueSoon() and !assignment.isOverdue()}" class="badge badge-due-soon" th:text="${#temporals.format(assignment.dueDate, 'MMM d, yyyy HH:mm')}">Date</span>
+                                        <span th:if="${!assignment.isOverdue() and !assignment.isDueSoon()}" th:text="${#temporals.format(assignment.dueDate, 'MMM d, yyyy HH:mm')}">Date</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${assignment.priority.badgeClass}" th:text="${assignment.priority.displayName}">Priority</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${assignment.status.badgeClass}" th:text="${assignment.status.displayName}">Status</span>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <div style="display: inline-flex; gap: 0.35rem;">
+                                            <a th:href="@{'/assignments/' + ${assignment.id}}" class="btn btn-sm btn-secondary">Details</a>
+                                            <a th:href="@{'/assignments/' + ${assignment.id} + '/edit'}" class="btn btn-sm btn-secondary">Edit</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Delete Modal -->
+                <dialog th:id="'delete-sub-detail-' + ${subject.id}" class="cf-modal">
+                    <div class="modal-header">
+                        <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--neutral-900);">Delete Subject</h3>
+                        <button type="button" class="alert-close" data-modal-close aria-label="Close">&times;</button>
+                    </div>
+                    <div class="modal-body" style="text-align: left;">
+                        <div th:if="${!#lists.isEmpty(assignments)}">
+                            <p style="color: var(--danger-text); font-weight: 600; margin-bottom: 0.5rem;">
+                                Cannot delete: This subject has <span th:text="${#lists.size(assignments)}">0</span> associated assignment(s).
+                            </p>
+                            <p style="font-size: 0.85rem; color: var(--neutral-600);">
+                                To preserve academic integrity and prevent accidental data loss, please delete or reassign all coursework under this subject first.
+                            </p>
+                        </div>
+                        <div th:if="${#lists.isEmpty(assignments)}">
+                            <p>Are you sure you want to delete "<strong th:text="${subject.name}">Subject</strong>"?</p>
+                            <p style="font-size: 0.85rem; color: var(--neutral-500); margin-top: 0.5rem;">This action cannot be undone.</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+                        <form th:if="${#lists.isEmpty(assignments)}" th:action="@{'/subjects/' + ${subject.id} + '/delete'}" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                        </form>
+                    </div>
+                </dialog>
+
+                <!-- Footer -->
+                <footer th:replace="~{fragments/footer :: footer}"></footer>
+            </main>
+        </div>
+    </div>
+
+    <script th:src="@{/js/app.js}"></script>
+</body>
+</html>

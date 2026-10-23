@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: campusflow
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: campusflow-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: campusflow-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: campusflow-db
+          property: password
+
+databases:
+  - name: campusflow-db
+    plan: free
+    region: oregon
+    databaseName: campusflow_db
+    user: postgres

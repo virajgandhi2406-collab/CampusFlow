@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Productivity Insights')}">
+    <title>Productivity Insights — CampusFlow</title>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside th:replace="~{fragments/sidebar :: sidebar(${activeNav})}"></aside>
+
+        <!-- Main Content Wrapper -->
+        <div class="main-wrapper">
+            <!-- Topbar Header -->
+            <header th:replace="~{fragments/topbar :: topbar('Productivity Insights')}"></header>
+
+            <main class="content-body">
+                <!-- Alerts / Flash Messages -->
+                <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+                <!-- Page Header with Date Range -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--neutral-900);">Weekly Academic Velocity</h2>
+                        <p style="font-size: 0.875rem; color: var(--neutral-500);">
+                            Performance window: <strong th:text="${stats.weekStartFormatted + ' – ' + stats.weekEndFormatted}">Oct 19 – Oct 25, 2026</strong>
+                        </p>
+                    </div>
+                    <span class="badge" style="background-color: var(--primary-light); color: var(--primary); padding: 0.4rem 0.85rem; font-size: 0.825rem;">
+                        Live Data Summary
+                    </span>
+                </div>
+
+                <!-- Metrics Grid -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="metric-label">Completed This Week</span>
+                        <span class="metric-value" style="color: var(--success-text);" th:text="${stats.completedThisWeek}">0</span>
+                        <span class="metric-sub" th:text="${stats.totalCompletedAllTime + ' total all-time'}">0 total</span>
+                    </div>
+
+                    <div class="metric-card">
+                        <span class="metric-label">Due This Week</span>
+                        <span class="metric-value" style="color: var(--warning-text);" th:text="${stats.pendingThisWeek}">0</span>
+                        <span class="metric-sub">Still pending submission</span>
+                    </div>
+
+                    <div class="metric-card">
+                        <span class="metric-label">Total Overdue</span>
+                        <span class="metric-value" th:style="${stats.overdueCount > 0} ? 'color: var(--danger-text);' : 'color: var(--neutral-400);'"
+                              th:text="${stats.overdueCount}">0</span>
+                        <span class="metric-sub" th:text="${stats.overdueCount > 0 ? 'Requires attention' : 'No overdue items'}">Status</span>
+                    </div>
+
+                    <div class="metric-card">
+                        <span class="metric-label">Weekly Completion Rate</span>
+                        <span class="metric-value" style="color: var(--primary);" th:text="${stats.completionRate + '%'}">0%</span>
+                        <span class="metric-sub">Ratio of completed to week's tasks</span>
+                    </div>
+                </div>
+
+                <!-- Weekly Completion Chart Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h3 class="card-title">Day-by-Day Task Completion</h3>
+                            <p style="font-size: 0.825rem; color: var(--neutral-500); margin-top: 0.15rem;">
+                                Visual distribution of assignments marked complete across the current week
+                            </p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div style="position: relative; height: 280px; width: 100%;">
+                            <canvas id="weeklyCompletionChart"
+                                    th:attr="data-labels=${stats.dayLabelsJson}, data-counts=${stats.dayCompletionsJson}">
+                            </canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Meaningful Calculations & Definitions Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Metric Definitions &amp; Methodology</h3>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; font-size: 0.875rem;">
+                            <div>
+                                <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--neutral-800); margin-bottom: 0.35rem;">
+                                    Weekly Window
+                                </h4>
+                                <p style="color: var(--neutral-600); line-height: 1.5;">
+                                    The weekly window starts on <strong>Monday 00:00:00 UTC</strong> and concludes on <strong>Sunday 23:59:59.999 UTC</strong>. Dates are strictly matched against UTC database timestamps to ensure timezone neutrality.
+                                </p>
+                            </div>
+
+                            <div>
+                                <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--neutral-800); margin-bottom: 0.35rem;">
+                                    Completed This Week
+                                </h4>
+                                <p style="color: var(--neutral-600); line-height: 1.5;">
+                                    Reflects the exact count of coursework items whose <code>completed_at</code> timestamp falls between the start and end of the current calendar week.
+                                </p>
+                            </div>
+
+                            <div>
+                                <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--neutral-800); margin-bottom: 0.35rem;">
+                                    Weekly Completion Percentage
+                                </h4>
+                                <p style="color: var(--neutral-600); line-height: 1.5;">
+                                    Calculated as <code>completed / (completed + pending_due_this_week) * 100</code>. This reflects your progress specifically against the commitments scheduled for this week.
+                                </p>
+                            </div>
+
+                            <div>
+                                <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--neutral-800); margin-bottom: 0.35rem;">
+                                    Overdue Classification
+                                </h4>
+                                <p style="color: var(--neutral-600); line-height: 1.5;">
+                                    An assignment is marked overdue when its due date and time is earlier than the current instant and its status has not yet transitioned to <code>COMPLETED</code>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <footer th:replace="~{fragments/footer :: footer}"></footer>
+            </main>
+        </div>
+    </div>
+
+    <!-- Chart.js CDN and initialization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script th:src="@{/js/chart-config.js}"></script>
+    <script th:src="@{/js/app.js}"></script>
+</body>
+</html>
