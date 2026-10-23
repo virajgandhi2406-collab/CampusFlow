@@ -1,6 +1,14 @@
 # CampusFlow — Student Academic & Deadline Tracker
 
+[![Java 21](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
+[![Spring Boot 3.3.4](https://img.shields.io/badge/Spring_Boot-3.3.4-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Tests Passing](https://img.shields.io/badge/Tests-51%20Passed-success)](#10-automated-tests)
+
 A full-stack web application engineered for college students and academic learners to organize course subjects, track deadlines, monitor priorities, and visualize academic productivity.
+
+- **GitHub Repository**: [https://github.com/virajgandhi2406-collab/CampusFlow](https://github.com/virajgandhi2406-collab/CampusFlow)
+- **Live Public URL**: [https://solid-mirrors-stay.loca.lt](https://solid-mirrors-stay.loca.lt) *(Tunnel Endpoint Verification Password: `103.35.133.180`)*
 
 ---
 
